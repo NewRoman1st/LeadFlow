@@ -10,13 +10,14 @@ and update their status, and can send new-lead notifications to Telegram.
 ## Features
 
 - Create leads with name, phone, service and message.
+- Trim and validate incoming text fields.
 - Store data in SQLite using parameterized SQL queries.
 - List, filter and search leads with pagination.
 - Update a lead status: `new`, `in_progress`, `completed`, `rejected`.
 - View a summary report grouped by status.
 - Optional Telegram notification on new lead.
 - Interactive API documentation via Swagger UI.
-- Automated API tests.
+- Automated API tests covering validation, CRUD flow, filtering, pagination and reports.
 
 ## Stack
 
@@ -29,7 +30,7 @@ Python 3.11+, FastAPI, SQLite, Pydantic, HTTPX, pytest.
 python -m venv .venv
 
 # Windows PowerShell
-.venv\\Scripts\\Activate.ps1
+.venv\Scripts\Activate.ps1
 
 # macOS / Linux
 source .venv/bin/activate
@@ -52,8 +53,8 @@ Open `http://127.0.0.1:8000/docs` for interactive API documentation.
 Create a lead:
 
 ```bash
-curl -X POST "http://127.0.0.1:8000/leads" \\
-  -H "Content-Type: application/json" \\
+curl -X POST "http://127.0.0.1:8000/leads" \
+  -H "Content-Type: application/json" \
   -d '{"name":"Ivan Petrov","phone":"+79990000000","service":"Laptop repair","message":"Device will not start"}'
 ```
 
@@ -72,8 +73,8 @@ curl "http://127.0.0.1:8000/leads?search=Ivan"
 Change status:
 
 ```bash
-curl -X PATCH "http://127.0.0.1:8000/leads/1/status" \\
-  -H "Content-Type: application/json" \\
+curl -X PATCH "http://127.0.0.1:8000/leads/1/status" \
+  -H "Content-Type: application/json" \
   -d '{"status":"in_progress"}'
 ```
 
@@ -90,14 +91,18 @@ curl "http://127.0.0.1:8000/reports/summary"
 3. Put both values in `.env`.
 4. Restart the API.
 
-If Telegram is not configured or is temporarily unavailable, the lead is still
-saved. Never commit `.env` or publish real bot tokens.
+Telegram messages use actual line breaks. If Telegram is not configured or is
+temporarily unavailable due to an HTTP/network error, the lead is still saved.
+Never commit `.env` or publish real bot tokens.
 
 ## Run tests
 
 ```bash
 pytest -q
 ```
+
+Each API test uses its own temporary SQLite database, so tests do not depend on
+one another or modify the local development database.
 
 ## Project structure
 
@@ -111,6 +116,7 @@ LeadFlow/
 │   ├── notifications.py
 │   └── schemas.py
 ├── tests/
+│   ├── conftest.py
 │   └── test_api.py
 ├── .env.example
 ├── .gitignore
